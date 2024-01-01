@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts.apps.AccountsConfig',
     'home.apps.HomeConfig',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -113,6 +114,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static'
+]
+
+# media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -120,3 +128,13 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.User'
+
+# arvan cloud storages
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+AWS_S3_ACCESS_KEY_ID = 'b605746d-b261-42d2-b089-8110c39bea7f'
+AWS_S3_SECRET_ACCESS_KEY = '58d27fa460991dbd565ce8d1c972996594324ed845e8500ba87eb49b655e5dc5'
+AWS_S3_ENDPOINT_URL = 'https://s3.ir-thr-at1.arvanstorage.ir'
+AWS_STORAGE_BUCKET_NAME = 'new-shop'
+AWS_SERVICE_NAME = 's3'
+AWS_S3_OVERWRITE = False

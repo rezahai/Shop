@@ -4,8 +4,15 @@
             <a class="nav-link active" href="{%  url 'home:home' %}">Home</a>
             <a class="nav-link active" href="{% url 'accounts:user_register' %}">Register</a>
             <a class="nav-link active" href="">Profile</a>
-            <a class="nav-link active" href="">logout</a>
-            <a class="nav-link active" href="">login</a>
+            <a class="nav-link active" href="{% url 'accounts:user_login' %}">login</a>
+            <a class="nav-link active" href="{% url 'accounts:user_logout' %}">logout</a>
+            {% if request.user.is_admin %}
+            	<a class="nav-link active" href="{% url 'home:bucket' %}">Bucket</a>
+            {% endif %}
+            {% if request.user.is_authenticated %}
+                <h3>{{ user.full_name }}</h3>
+            {% endif %}
         </div>
     </div>
 </nav>
+ 

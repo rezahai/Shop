@@ -1,10 +1,13 @@
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.views import View
-from .forms import UserRegistrationForm, VerifyCodeForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .forms import UserRegistrationForm, VerifyCodeForm, UserLoginForm
+from django.contrib.auth import login, logout, authenticate
 from .models import OtpCode, User
 import random
 from utils import send_otp_code
+from datetime import datetime, timedelta
 
 
 class UserRegisterView(View):
@@ -28,7 +31,7 @@ class UserRegisterView(View):
             }
             messages.success(request, 'we sent your sms', 'success')
             return redirect('accounts:verify_code')
-        return redirect('home:home')
+        return render(request, 'accounts/register.html', {'form': form})
 
 
 class UserRegisterVerifyCodeView(View):
@@ -43,14 +46,51 @@ class UserRegisterVerifyCodeView(View):
         code_instance = OtpCode.objects.get(phone_number=user_session['phone_number'])
         form = self.form_class(request.POST)
         if form.is_valid():
+            now = datetime.now()
+            expired_time = now + timedelta(minutes=1)
             cd = form.cleaned_data
-            if cd['code'] == code_instance.code:
+            if cd['code'] == code_instance.code and now > expired_time:
                 User.objects.create(phone_number=user_session['phone_number'], email=user_session['email'],
                                     full_name=user_session['full_name'], password=user_session['password'])
                 code_instance.delete()
-                messages.success(request, 'user successfully registered', 'success')
+                messages.success(request, 'user successfully registered or expired', 'success')
                 return redirect('home:home')
             else:
                 messages.error(request, 'the code is not valid', 'danger')
                 return redirect('accounts:verify_code')
         return redirect('home:home')
+
+
+class UserLoginView(View):
+    form_class = UserLoginForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home:home')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        form = self.form_class()
+        return render(request, 'accounts/login.html', {'form': form})
+
+    def post(self, request):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            cd=form.cleaned_data
+            user = authenticate(username=cd['phone_number'], password=cd['password'])
+            if user is not None:
+                login(request, user)
+                messages.success(request, 'you are logged in', 'success')
+                return redirect('home:home')
+            else:
+                messages.error(request, 'password or phone number is not valid', 'danger')
+        return render(request, 'accounts/login.html', {'form': form})
+
+
+class UserLogoutView(LoginRequiredMixin, View):
+    def get(self, request):
+        if request.user.is_authenticated:
+            logout(request)
+            messages.success(request, 'you are logged out', 'success')
+            return redirect('home:home')
+
