@@ -3,12 +3,12 @@ from datetime import timedelta
 import os
 
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'c.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'C.settings')
 
-celery_app = Celery('c')
+celery_app = Celery('C')
 celery_app.autodiscover_tasks()
 
-celery_app.conf.broker_url = 'amqp://'
+celery_app.conf.broker_url = 'amqp://reza:reza@localhost:5672'
 celery_app.conf.result_backend = 'rpc://'
 celery_app.conf.task_serializer = 'json'
 celery_app.conf.result_serializer = 'pickle'
