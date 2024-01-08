@@ -1,12 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-    </div>
     <h2>{{ product.name }}</h2>
     <small>{{ product.created_at }}</small><br/>
     <p>{{ product.price }} Toman</p>
-    <img class="rounded mx-auto d-block" src="{{ product.image.url }}" alt=" ">
-    <p>{{ product.description }}</p>
+    <img class="rounded mx-auto d-block" src="{{ product.image.url }}" alt=" " style="width: 300px">
+    <p>{{ product.description }}</p><br/><br/>
+    <form action="{% url 'orders:cart_add' product.id %}" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="cart_add">
+    </form>
 {% endblock content %}

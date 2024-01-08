@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import UserRegistrationForm, VerifyCodeForm, UserLoginForm
@@ -7,7 +8,7 @@ from django.contrib.auth import login, logout, authenticate
 from .models import OtpCode, User
 import random
 from utils import send_otp_code
-from datetime import datetime, timedelta
+from datetime import  timedelta
 
 
 class UserRegisterView(View):
@@ -46,15 +47,19 @@ class UserRegisterVerifyCodeView(View):
         code_instance = OtpCode.objects.get(phone_number=user_session['phone_number'])
         form = self.form_class(request.POST)
         if form.is_valid():
-            now = datetime.now()
-            expired_time = now + timedelta(minutes=1)
+            now = timezone.now()
+            expired_time = code_instance.created + timedelta(minutes=1)
             cd = form.cleaned_data
-            if cd['code'] == code_instance.code and now > expired_time:
+            if cd['code'] == code_instance.code and now < expired_time:
                 User.objects.create(phone_number=user_session['phone_number'], email=user_session['email'],
                                     full_name=user_session['full_name'], password=user_session['password'])
                 code_instance.delete()
-                messages.success(request, 'user successfully registered or expired', 'success')
+                messages.success(request, 'user registered successfully', 'success')
                 return redirect('home:home')
+            elif now > expired_time:
+                code_instance.delete()
+                messages.error(request, 'code expired', 'danger')
+                return redirect('accounts:user_register')
             else:
                 messages.error(request, 'the code is not valid', 'danger')
                 return redirect('accounts:verify_code')
@@ -76,8 +81,8 @@ class UserLoginView(View):
     def post(self, request):
         form = self.form_class(request.POST)
         if form.is_valid():
-            cd=form.cleaned_data
-            user = authenticate(username=cd['phone_number'], password=cd['password'])
+            cd = form.cleaned_data
+            user = authenticate(request, username=cd['phone_number'], password=cd['password'])
             if user is not None:
                 login(request, user)
                 messages.success(request, 'you are logged in', 'success')
